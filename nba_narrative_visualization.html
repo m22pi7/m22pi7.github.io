@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<h1>More experience? More expectations.</h1>
+<p>Veteran NBA players must achieve higher average performance, or be valuable leaders, in order to retain their senior positions. Data from 2022-2023 basketball season.</p>
+<h4 id="slidemessage">Select Phase 1 to begin!</h4>
+<!-- <input type="number" id="domainLowerBound" value=17> -->
+<p id="description" hidden>Age upper bound (must be above 18 and below 50):</p>
+<input type="number" id="domainUpperBound" value=45 hidden>
+<p></p>
+<!-- <p display="inline">PPG lower bound:</p>
+<input type="number" id="rangeLowerBound" value=0> -->
+<!-- <input type="number" id="rangeUpperBound" value=38> -->
+
+<div id="nbaanalysis"></div>
+
+<script>
+
+var state = "Choose Phase"
+// Some parts referenced from https://stackoverflow.com/questions/11189284/d3-axis-labeling
+// and also https://www.coursera.org/learn/cs-416-dv/lecture/oPjO6/8-3-2-d3-events
+
+
+// document.addEventListener("keypress", function pressed(kp)
+// {
+//   if (kp.key == "ArrowRight")
+//   {
+//     console.log("here")
+//     state++;
+//     if (state < 3)
+//     {
+//       d3.select("#description").style("display", "none");
+//     }
+//     else
+//     {
+//       d3.select("#description").style("display", "block");
+//     }
+//   }
+// });
+
+
+// var kp = d3.select("#description").on("keypress", function() {
+//   console.log("here")
+//   if (d3.event.keyCode == 32)
+//   {
+//     state++;
+//     if (state < 3)
+//     {
+//       d3.select("#description").style("display", "none");
+//     }
+//     else
+//     {
+//       d3.select("#description").style("display", "block");
+//     }
+//   }
+// })
+
+var visSteps = ["Choose Phase", "Phase 1", "Phase 2", "Phase 3", "Phase 4", "Explore"]
+currentPhase = d3.select("#nbaanalysis").append("select")
+currentPhase.selectAll("option").data(visSteps).enter().append("option")
+  .text(function(d) { return d; })
+  .attr("value", function(d) { return d; })
+
+var svg = d3.select("#nbaanalysis")
+.append("svg")
+  .attr("width", 600)
+  .attr("height", 600)
+.append("g")
+  .attr("transform", "translate(50,50)");
+
+d3.csv("https://raw.githubusercontent.com/m22pi7/NBANarrativeVisualization/main/season_2223.csv", 
+function(data)
+{
+  function changeDomain()
+  {
+    newLim = this.value
+    if (newLim <= 18 || newLim > 50)
+      return;
+    x.domain([18,newLim]);
+    horizontal.transition().duration(1000).delay(100).call(d3.axisBottom(x));
+    svg.selectAll("circle").data(data).transition().duration(1000)
+        .attr("cx", function(d) { return (d.age > newLim)? 1000 : x(d.age); })
+        .attr("cy", function(d) { return y(d.pts); });
+  }
+
+  function changeRange()
+  {
+    newLim = this.value;
+    y.domain([newLim, 38]);
+    vertical.transition().duration(1000).delay(100).call(d3.axisLeft(y));
+    svg.selectAll("circle").data(data).filter(function(d) { return d.pts >= newLim; }).transition().duration(1000)
+        .attr("cx", function(d) { return x(d.age); })
+        .attr("cy", function(d) { return y(d.pts); });
+  }
+
+  var x = d3.scaleLinear().domain([18, 18]).range([0, 500]);
+  var y = d3.scaleLinear().domain([-0.5, 38]).range([500, 0]);
+
+  var horizontal = svg.append("g").call(d3.axisBottom(x))
+    .attr("transform", "translate(0,500)");
+
+  var vertical = svg.append("g").call(d3.axisLeft(y));
+
+  svg.append('g').selectAll("circle").data(data).enter().append("circle")
+      .attr("cx", function(d) { return x(d.age); })
+      .attr("cy", function(d) { return y(d.pts); })
+      .attr("r", 2)
+      .style("fill", "darkorange");
+  
+  svg.append("text").text("Age (years)")
+    .attr("x", 500)
+    .attr("y", 530)
+    .attr("text-anchor", "end")
+    .attr("font-size", "11px");
+
+  svg.append("text").text("Points per Game (PPG)")
+    .attr("y", -30)
+    .attr("transform", "rotate(270)")
+    .attr("text-anchor", "end")
+    .attr("font-size", "11px");
+
+  svg.append("text").text("Paolo Blanchero")
+      .attr("id", "p1_1")
+      .attr("x", 160)
+      .attr("y", 200)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+    
+  svg.append("text").text("2022 Rookie of the Year Winner")
+      .attr("id", "p1_2")
+      .attr("x", 130)
+      .attr("y", 215)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+  svg.append("text").text("Zion Williamson")
+      .attr("id", "p1_3")
+      .attr("x", 315)
+      .attr("y", 130)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+    
+  svg.append("text").text("2020 Rookie of the Year Nominee")
+      .attr("id", "p1_4")
+      .attr("x", 285)
+      .attr("y", 145)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+  svg.append("text").text("Ja Morant")
+      .attr("id", "p1_5")
+      .attr("x", 465)
+      .attr("y", 125)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+    
+  svg.append("text").text("2020 Rookie of the Year Winner")
+      .attr("id", "p1_6")
+      .attr("x", 425)
+      .attr("y", 140)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+  svg.append("text").text("Luka Doncic [32.4 PPG]")
+      .attr("id", "p2_1")
+      .attr("x", 300)
+      .attr("y", 63)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+    
+  svg.append("text").text("Shai Gilgeous-Alexander [31.4 PPG]")
+      .attr("id", "p2_2")
+      .attr("x", 235)
+      .attr("y", 100)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+  svg.append("text").text("Jason Tatum [30.1 PPG]")
+      .attr("id", "p2_3")
+      .attr("x", 370)
+      .attr("y", 115)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+  svg.append("text").text("Frank Jackson [0.0 PPG]")
+      .attr("id", "p2_4")
+      .attr("x", 398)
+      .attr("y", 487)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+  svg.append("text").text("(No longer in NBA)")
+      .attr("id", "p2_5")
+      .attr("x", 405)
+      .attr("y", 497)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+  
+  svg.append("text").text("Joel Embiid")
+      .attr("id", "p3_1")
+      .attr("x", 347)
+      .attr("y", 45)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+    svg.append("text").text("Highest PPG [33.1] and League MVP")
+      .attr("id", "p3_2")
+      .attr("x", 305)
+      .attr("y", 55)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+    svg.append("text").text("Matthew Dellavedova (injured)")
+      .attr("id", "p3_3")
+      .attr("x", 410)
+      .attr("y", 467)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+    svg.append("text").text("Former Cavs NBA Finalist")
+      .attr("id", "p3_4")
+      .attr("x", 420)
+      .attr("y", 486)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+    svg.append("text").text("(No longer in NBA)")
+      .attr("id", "p3_5")
+      .attr("x", 427)
+      .attr("y", 496)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+    svg.append("text").text("Kevin Durant [29.1 PPG]")
+      .attr("id", "p4_1")
+      .attr("x", 265)
+      .attr("y", 130)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+      
+    svg.append("text").text("Stephen Curry [29.4 PPG]")
+      .attr("id", "p4_2")
+      .attr("x", 300)
+      .attr("y", 102)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+    svg.append("text").text("LeBron James [28.9 PPG]")
+      .attr("id", "p4_3")
+      .attr("x", 393)
+      .attr("y", 125)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+    svg.append("text").text("Udonis Haslem")
+      .attr("id", "p4_4")
+      .attr("x", 454)
+      .attr("y", 425)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+    svg.append("text").text("Long time Heat vetran")
+      .attr("id", "p4_5")
+      .attr("x", 443)
+      .attr("y", 435)
+      .style("font-size", "9px")
+      .style("fill", "darkred")
+      .style("opacity", 0);
+
+  d3.select("#domainUpperBound").on("input", changeDomain);
+  // d3.select("#rangeLowerBound").on("input", changeRange);  
+
+  var tooltip = d3.select("#nbaanalysis")
+        .append("div")
+          .style("top", 100)
+          .style("left", 1000)
+          .style("opacity", 0);
+
+  function changePhase(newPhase)
+  {
+    svg.select("#p1_1").style("opacity", 0);
+    svg.select("#p1_2").style("opacity", 0);
+    svg.select("#p1_3").style("opacity", 0);
+    svg.select("#p1_4").style("opacity", 0);
+    svg.select("#p1_5").style("opacity", 0);
+    svg.select("#p1_6").style("opacity", 0);
+    svg.select("#p2_1").style("opacity", 0);
+    svg.select("#p2_2").style("opacity", 0);
+    svg.select("#p2_3").style("opacity", 0);
+    svg.select("#p2_4").style("opacity", 0);
+    svg.select("#p2_5").style("opacity", 0);
+    svg.select("#p3_1").style("opacity", 0);
+    svg.select("#p3_2").style("opacity", 0);
+    svg.select("#p3_3").style("opacity", 0);
+    svg.select("#p3_4").style("opacity", 0);
+    svg.select("#p3_5").style("opacity", 0);
+    svg.select("#p4_1").style("opacity", 0);
+    svg.select("#p4_2").style("opacity", 0);
+    svg.select("#p4_3").style("opacity", 0);
+    svg.select("#p4_4").style("opacity", 0);
+    svg.select("#p4_5").style("opacity", 0);
+
+    state = newPhase;
+    if(state == "Choose Phase")
+    {
+      d3.select("#slidemessage").html("<h4>Select Phase 1 to begin!</h4>");
+      d3.select("#description").style("display", "none");
+      d3.select("#domainUpperBound").style("display", "none");
+      d3.select("#domainUpperBound").attr("value", 18);
+      x.domain([18,18]);
+      horizontal.transition().duration(1000).delay(100).call(d3.axisBottom(x));
+      svg.selectAll("circle").data(data).transition().duration(1000)
+          .attr("cx", function(d) { return (d.age > 18)? 1000 : x(d.age); })
+          .attr("cy", function(d) { return y(d.pts); })
+          .attr("r", 2)
+          .style("fill", "darkorange");
+    }
+    if(state == "Phase 1")
+    {
+      svg.select("#p1_1").transition().duration(1000).style("opacity", 1);
+      svg.select("#p1_2").transition().duration(1000).style("opacity", 1);
+      svg.select("#p1_3").transition().duration(1000).style("opacity", 1);
+      svg.select("#p1_4").transition().duration(1000).style("opacity", 1);
+      svg.select("#p1_5").transition().duration(1000).style("opacity", 1);
+      svg.select("#p1_6").transition().duration(1000).style("opacity", 1);
+
+      d3.select("#slidemessage").html("<h4>Players in the 19-23 age range are generally recent rookies drafted out of college (or rarely high school). Here we can observe multiple Rookie of the Year contenders averaging up to 25 points, although the majority remain in the less than 15 points region (with many having less than 5!)</h4>");
+      d3.select("#description").style("display", "none");
+      d3.select("#domainUpperBound").style("display", "none");
+      d3.select("#domainUpperBound").attr("value", 23);
+      x.domain([18,23]);
+      horizontal.transition().duration(1000).delay(100).call(d3.axisBottom(x));
+      svg.selectAll("circle").data(data).transition().duration(1000)
+          .attr("cx", function(d) { return (d.age > 23)? 1000 : x(d.age); })
+          .attr("cy", function(d) { return y(d.pts); })
+          .attr("r", function(d) { return (d.player_name == "Paolo Banchero" || d.player_name == "Zion Williamson" || d.player_name == "Ja Morant")? 4: 2; })
+          .style("fill", function(d) { return (d.player_name == "Paolo Banchero" || d.player_name == "Zion Williamson" || d.player_name == "Ja Morant")? "red": "darkorange"; });
+    }
+    if(state == "Phase 2")
+    {
+      svg.select("#p2_1").transition().duration(1000).style("opacity", 1);
+      svg.select("#p2_2").transition().duration(1000).style("opacity", 1);
+      svg.select("#p2_3").transition().duration(1000).style("opacity", 1);
+      svg.select("#p2_4").transition().duration(1000).style("opacity", 1);
+      svg.select("#p2_5").transition().duration(1000).style("opacity", 1);
+
+      d3.select("#slidemessage").html("<h4>As players age further and gain experience, we begin to notice our first 30+ points per game players. These are often the lead scorers of their team, and can have very expensive contracts. However, some 0-1 point (less than 1 made shot) per game averages continue to be observed in the 24-27 age range.</h4>");
+      d3.select("#description").style("display", "none");
+      d3.select("#domainUpperBound").style("display", "none");
+      d3.select("#domainUpperBound").attr("value", 27);
+      x.domain([18,27]);
+      horizontal.transition().duration(1000).delay(100).call(d3.axisBottom(x));
+      svg.selectAll("circle").data(data).transition().duration(1000)
+          .attr("cx", function(d) { return (d.age > 27)? 1000 : x(d.age); })
+          .attr("cy", function(d) { return y(d.pts); })
+          .attr("r", function(d) { return (d.player_name == "Luka Doncic" || d.player_name == "Shai Gilgeous-Alexander" || d.player_name == "Jayson Tatum" || d.player_name == "Frank Jackson")? 4: 2; })
+          .style("fill", function(d) { return (d.player_name == "Luka Doncic" || d.player_name == "Shai Gilgeous-Alexander" || d.player_name == "Jayson Tatum" || d.player_name == "Frank Jackson")? "red": "darkorange"; });
+    }
+    if(state == "Phase 3")
+    {
+      svg.select("#p3_1").transition().duration(1000).style("opacity", 1);
+      svg.select("#p3_2").transition().duration(1000).style("opacity", 1);
+      svg.select("#p3_3").transition().duration(1000).style("opacity", 1);
+      svg.select("#p3_4").transition().duration(1000).style("opacity", 1);
+      svg.select("#p3_5").transition().duration(1000).style("opacity", 1);
+
+      d3.select("#slidemessage").html("<h4>The current highest PPG average in the NBA comes from around the 30 year-old range. Notice how the frequency of lower performers begins to thin-out as age incrases around this threshold. Many household names can be found in this area, and fewer non-familiar players. The average age for retirement in the NBA is 28 (especially due to injuries or physical slowdown), but a few star players are able to last well beyond that!</h4>");
+      d3.select("#description").style("display", "none");
+      d3.select("#domainUpperBound").style("display", "none");
+      d3.select("#domainUpperBound").attr("value", 33);
+      x.domain([18,33]);
+      horizontal.transition().duration(1000).delay(100).call(d3.axisBottom(x));
+      svg.selectAll("circle").data(data).transition().duration(1000)
+          .attr("cx", function(d) { return (d.age > 33)? 1000 : x(d.age); })
+          .attr("cy", function(d) { return y(d.pts); })
+          .attr("r", function(d) { return (d.player_name == "Joel Embiid" || d.player_name == "Matthew Dellavedova")? 4: 2; })
+          .style("fill", function(d) { return (d.player_name == "Joel Embiid" || d.player_name == "Matthew Dellavedova")? "red": "darkorange"; });
+    }
+    if(state == "Phase 4")
+    {
+      svg.select("#p4_1").transition().duration(1000).style("opacity", 1);
+      svg.select("#p4_2").transition().duration(1000).style("opacity", 1);
+      svg.select("#p4_3").transition().duration(1000).style("opacity", 1);
+      svg.select("#p4_4").transition().duration(1000).style("opacity", 1);
+      svg.select("#p4_5").transition().duration(1000).style("opacity", 1);
+
+      d3.select("#slidemessage").html("<h4>At this point, the few senior players at ages in their mid-to-late 30s are usually franchise stars or experienced vetrans who can guide a team. The large clusters of mid-performing players are gone. Notice that all of these older players average at least 2 points per game (making at least one shot), with Durant, Curry, and LeBron leading far above this amount!</h4>");
+      d3.select("#description").style("display", "none");
+      d3.select("#domainUpperBound").style("display", "none");
+      d3.select("#domainUpperBound").attr("value", 44);
+      x.domain([18,44]);
+      horizontal.transition().duration(1000).delay(100).call(d3.axisBottom(x));
+      svg.selectAll("circle").data(data).transition().duration(1000)
+          .attr("cx", function(d) { return (d.age > 44)? 1000 : x(d.age); })
+          .attr("cy", function(d) { return y(d.pts); })
+          .attr("r", function(d) { return (d.player_name == "LeBron James" || d.player_name == "Kevin Durant" || d.player_name == "Stephen Curry" || d.player_name == "Udonis Haslem")? 4: 2; })
+          .style("fill", function(d) { return (d.player_name == "LeBron James" || d.player_name == "Kevin Durant" || d.player_name == "Stephen Curry" || d.player_name == "Udonis Haslem")? "red": "darkorange"; });
+    }
+    if(state == "Explore")
+    {
+      d3.select("#slidemessage").html("<h4>Hover your mouse over any data point to learn more. You can also customize the age upper bound as desired! </h4>");
+      d3.selectAll("circle")
+        .on("mouseover", function(d){ 
+          tooltip.style("opacity", 1)
+          .style("left", (d3.event.pageX)+"px")
+          .style("top", (d3.event.pageY)+"px")
+          .html("<p></p>"+d.player_name + " (" + d.team_abbreviation + ")  |  Age: " + d.age + "  |  PPG: " + d.pts);
+          
+          if (d3.select(this).attr("r") == 4) return;
+        
+          d3.select(this)
+            .attr("r", 5)
+            .style("fill", "purple");
+        })
+        .on("mouseout", function(){ 
+          tooltip.style("opacity", 0); 
+          if (d3.select(this).attr("r") == 4) return;
+          d3.select(this)
+            .attr("r", 2)
+            .style("fill", "darkorange");
+        })
+
+
+      d3.select("#description").style("display", "block");
+      d3.select("#domainUpperBound").style("display", "block");
+      d3.select("#domainUpperBound").attr("value", 45);
+      x.domain([18,45]);
+      horizontal.transition().duration(1000).delay(100).call(d3.axisBottom(x));
+      svg.selectAll("circle").data(data).transition().duration(1000)
+          .attr("cx", function(d) { return (d.age > 45)? 1000 : x(d.age); })
+          .attr("cy", function(d) { return y(d.pts); })
+          .attr("r", 2)
+          .style("fill", "darkorange");
+    }
+  }
+
+  currentPhase.on("change", function(d) {
+    var newPhase = d3.select(this).property("value")
+    changePhase(newPhase);
+  })
+
+})
+
+
+</script>
+<p></p>
+<p></p>
+<p></p>
+
+<!-- Sections: -->
+
+<!-- 19-23 (rookies out of college or rarely highschool)
+
+Point out Paolo Banchero [2022 Rookie of the Year]
+
+24-27 (first 30+ PPG)
+28-33 (mix of injured players, some stars)
+34+ (star power and experienced players, none have an average of less than 2 PPG) -->
+
+<!-- TODO: Add annotations, descriptions in <p></p> for each scene -->
